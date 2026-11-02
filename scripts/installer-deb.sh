@@ -206,12 +206,12 @@ if [ "$ARCH" = "aarch64" ]; then
         exit 0
     fi
 
-    printf "${green}Installing Guppy Screen (OpenKE - coreflake1 fork) ${white}\n"
+    printf "${green}Installing Guppy Screen (OpenKE - alexholco/openke) ${white}\n"
 
-    ASSET_URL="https://github.com/coreflake1/guppyscreen/releases/download/${PINNED_RELEASE}/guppyscreen-arm.tar.gz"
+    ASSET_URL="https://github.com/alexholco/openke/releases/download/${PINNED_RELEASE}/guppyscreen-arm.tar.gz"
     if [ "$1" = "nightly" ]; then
         printf "${yellow}Installing nightly build ${white}\n"
-        ASSET_URL="https://github.com/coreflake1/guppyscreen/releases/download/nightly/guppyscreen-arm.tar.gz"
+        ASSET_URL="https://github.com/alexholco/openke/releases/download/nightly/guppyscreen-arm.tar.gz"
     fi
 
     curl -s -L $ASSET_URL -o /tmp/guppyscreen.tar.gz

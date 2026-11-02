@@ -25,7 +25,7 @@ later without recalibrating.
 SSH into the printer and run the same installer with the `uninstall` argument:
 
 ```sh
-sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/coreflake1/guppyscreen/main/scripts/installer.sh)" -- uninstall
+sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)" -- uninstall
 ```
 
 ### What it removes
@@ -115,7 +115,7 @@ Open **Settings → System → Reset Options → Factory Reset Printer** → red
 The printer boots into stock Creality firmware. To get OpenKE back:
 
 ```sh
-sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/coreflake1/guppyscreen/main/scripts/installer.sh)"
+sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)"
 ```
 
 See [Installation](Installation) for the full guided walkthrough.

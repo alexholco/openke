@@ -5,9 +5,9 @@ touchscreen UI, the print-quality mods that actually matter, and plain-English g
 installer.
 
 <p align="center">
-  <a href="https://github.com/coreflake1/guppyscreen/releases"><img alt="Release" src="https://img.shields.io/github/v/release/coreflake1/guppyscreen?style=flat-square&include_prereleases"></a>
-  <a href="https://github.com/coreflake1/guppyscreen/actions"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/coreflake1/guppyscreen/build.yml?style=flat-square"></a>
-  <a href="./LICENSE"><img alt="License" src="https://img.shields.io/github/license/coreflake1/guppyscreen?style=flat-square"></a>
+  <a href="https://github.com/alexholco/openke/releases"><img alt="Release" src="https://img.shields.io/github/v/release/alexholco/openke?style=flat-square&include_prereleases"></a>
+  <a href="https://github.com/alexholco/openke/actions"><img alt="Build" src="https://img.shields.io/github/actions/workflow/status/alexholco/openke/build.yml?style=flat-square"></a>
+  <a href="./LICENSE"><img alt="License" src="https://img.shields.io/github/license/alexholco/openke?style=flat-square"></a>
   <a href="https://discord.gg/wSmZcMtMdm"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join-5865F2?style=flat-square&logo=discord&logoColor=white"></a>
 </p>
 
@@ -38,7 +38,7 @@ It bundles three things people usually hunt down separately:
 - 🔒 **Print-state safety locks** — anything that could ruin a running job is blocked or asks first
 - 📐 Tuned **480×272** layout, with the screen mounted the right way up
 
-> Full screen tour: **[Using OpenKE](wiki/Using-GuppyKE.md)** · complete change history: **[Releases](https://github.com/coreflake1/guppyscreen/releases)**
+> Full screen tour: **[Using OpenKE](wiki/Using-GuppyKE.md)** · complete change history: **[Releases](https://github.com/alexholco/openke/releases)**
 
 ## Install
 
@@ -48,7 +48,7 @@ It bundles three things people usually hunt down separately:
 SSH into your printer and run:
 
 ```sh
-sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/coreflake1/guppyscreen/main/scripts/installer.sh)"
+sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)"
 ```
 
 > Use `installer.sh` — **not** `installer-deb.sh` (that one is for aarch64/Debian and refuses to run on the KE).
@@ -62,25 +62,21 @@ into your existing settings rather than overwriting them**, so nothing you've al
 the screen or in Klipper) gets reset.
 
 **Updating:** from the screen, **Settings → Update Guppy**. Coming from an older version (or "GuppyKE")?
-See **[Upgrading](https://github.com/coreflake1/guppyscreen/wiki/Upgrading)**.
+See **[Upgrading](https://github.com/alexholco/openke/wiki/Upgrading)**.
 
-**Uninstall:** re-run the command above with `uninstall` appended. Details: **[Installation](https://github.com/coreflake1/guppyscreen/wiki/Installation)**.
+**Uninstall:** re-run the command above with `uninstall` appended. Details: **[Installation](https://github.com/alexholco/openke/wiki/Installation)**.
 
-### Testing bleeding-edge builds
+### Installing a specific build
 
-> ⚠️ **Unstable, for testers only.** This is the `ke-next` development branch — it can contain
-> half-finished or experimental work between releases. Don't run this on a printer you rely on for
-> real prints unless you're comfortable recovering it yourself.
-
-Every push here builds automatically and publishes to a moving `nightly-ke-next` prerelease. To
-install the latest one:
+Every pull request merged into `main` builds automatically and publishes a release tagged `pr<N>`
+(the version on screen reads `pr<N>-<commit>`). The normal install command and **Settings → Update
+Guppy** always use the newest one. To install a particular build instead:
 
 ```sh
-PINNED_RELEASE=nightly-ke-next sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/coreflake1/guppyscreen/ke-next/scripts/installer.sh)"
+PINNED_RELEASE=pr4 sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)"
 ```
 
-To go back to the latest stable release, just re-run the normal install command above (no
-`PINNED_RELEASE`). More detail: **[Installation](wiki/Installation.md#testing-bleeding-edge-builds-ke-next-nightly)**.
+More detail: **[Installation](wiki/Installation.md#installing-a-specific-build)**.
 
 ## Compatibility
 
@@ -102,7 +98,7 @@ on Printables. Thanks Dylan!
 ## Screenshots
 
 > Captured live from a real Ender-3 V3 KE at its native 480×272 — not the simulator. Many more, covering
-> every screen in the app, are in the [screen reference](https://github.com/coreflake1/guppyscreen/wiki/Using-GuppyKE).
+> every screen in the app, are in the [screen reference](https://github.com/alexholco/openke/wiki/Using-GuppyKE).
 
 | | |
 |:---:|:---:|
@@ -115,25 +111,25 @@ on Printables. Thanks Dylan!
 
 ## Documentation
 
-Full documentation lives on the **[GitHub Wiki](https://github.com/coreflake1/guppyscreen/wiki)**. Highlights:
+Full documentation lives on the **[GitHub Wiki](https://github.com/alexholco/openke/wiki)**. Highlights:
 
-- [Calibration walkthrough (start here)](https://github.com/coreflake1/guppyscreen/wiki/Calibration-Explained)
-- [Installation](https://github.com/coreflake1/guppyscreen/wiki/Installation) · [Upgrading from an older version](https://github.com/coreflake1/guppyscreen/wiki/Upgrading)
-- [Axis Twist Compensation](https://github.com/coreflake1/guppyscreen/wiki/Axis-Twist-Compensation) · [Adaptive meshing + purge](https://github.com/coreflake1/guppyscreen/wiki/Adaptive-Print-Setup) · [Skew Correction](https://github.com/coreflake1/guppyscreen/wiki/Skew-Correction) · [TMC Autotune](https://github.com/coreflake1/guppyscreen/wiki/TMC-Autotune)
-- [Camera image tuning](https://github.com/coreflake1/guppyscreen/wiki/Camera-Image-Tuning)
-- [Troubleshooting](https://github.com/coreflake1/guppyscreen/wiki/Troubleshooting) · [Resetting & uninstalling](https://github.com/coreflake1/guppyscreen/wiki/Resetting-and-Uninstalling) · developer docs: [Building from Source](https://github.com/coreflake1/guppyscreen/wiki/Building-from-Source), [Architecture](https://github.com/coreflake1/guppyscreen/wiki/Architecture)
+- [Calibration walkthrough (start here)](https://github.com/alexholco/openke/wiki/Calibration-Explained)
+- [Installation](https://github.com/alexholco/openke/wiki/Installation) · [Upgrading from an older version](https://github.com/alexholco/openke/wiki/Upgrading)
+- [Axis Twist Compensation](https://github.com/alexholco/openke/wiki/Axis-Twist-Compensation) · [Adaptive meshing + purge](https://github.com/alexholco/openke/wiki/Adaptive-Print-Setup) · [Skew Correction](https://github.com/alexholco/openke/wiki/Skew-Correction) · [TMC Autotune](https://github.com/alexholco/openke/wiki/TMC-Autotune)
+- [Camera image tuning](https://github.com/alexholco/openke/wiki/Camera-Image-Tuning)
+- [Troubleshooting](https://github.com/alexholco/openke/wiki/Troubleshooting) · [Resetting & uninstalling](https://github.com/alexholco/openke/wiki/Resetting-and-Uninstalling) · developer docs: [Building from Source](https://github.com/alexholco/openke/wiki/Building-from-Source), [Architecture](https://github.com/alexholco/openke/wiki/Architecture)
 
 > The wiki pages are also maintained as Markdown in [`wiki/`](wiki/) in this repo and auto-published to the Wiki tab.
 
 ## Build from source
 
 ```bash
-git clone --recurse-submodules https://github.com/coreflake1/guppyscreen.git
+git clone --recurse-submodules https://github.com/alexholco/openke.git
 ```
 
 The desktop simulator (try the UI with no printer) and the MIPS cross-build for the KE are both covered in
-**[Building from Source](https://github.com/coreflake1/guppyscreen/wiki/Building-from-Source)**. The cross-build runs in this repo's toolchain
-container (`docker/Dockerfile`, published as `ghcr.io/coreflake1/guppydev`).
+**[Building from Source](https://github.com/alexholco/openke/wiki/Building-from-Source)**. The cross-build runs in the public
+`ballaswag/guppydev` toolchain container, the same one CI uses (`docker/Dockerfile` reproduces it from source).
 
 ## License & credits
 
@@ -142,4 +138,4 @@ container (`docker/Dockerfile`, published as `ghcr.io/coreflake1/guppydev`).
 [probielodan/guppyscreen](https://github.com/probielodan/guppyscreen), and
 [pellcorp/grumpyscreen](https://github.com/pellcorp/grumpyscreen), with the 3D bed mesh from
 [prestonbrown/guppyscreen](https://github.com/prestonbrown/guppyscreen). Vendored Klipper mods keep their
-own upstream licenses and credits — see [Contributing](https://github.com/coreflake1/guppyscreen/wiki/Contributing). *(Formerly "GuppyKE".)*
+own upstream licenses and credits — see [Contributing](https://github.com/alexholco/openke/wiki/Contributing). *(Formerly "GuppyKE".)*

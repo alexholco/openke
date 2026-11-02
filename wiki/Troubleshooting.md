@@ -93,7 +93,7 @@ default, purely informational — your value is never changed without you doing 
 
 **Easiest fix — re-run the installer:**
 ```sh
-sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/coreflake1/guppyscreen/main/scripts/installer.sh)"
+sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)"
 ```
 
 **Surgical fix — edit by hand instead.** Open `/usr/data/guppyscreen/guppyconfig.json` and set

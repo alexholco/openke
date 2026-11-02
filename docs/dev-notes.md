@@ -19,7 +19,7 @@ Accumulated discoveries from building and packaging this branch for the Ender-3 
 ballaswag/guppyscreen          (original)
     └── probielodan/guppyscreen (KE-focused UI rework)
             └── coreflake1/guppyscreen
-                    └── ke-advanced-3d-bedmesh  ← this branch
+                    └── alexholco/openke  ← this repo
 ```
 
 3D bed mesh panel cherry-picked from prestonbrown/guppyscreen commit `bced7f7`.
@@ -47,9 +47,8 @@ ballaswag/guppyscreen          (original)
 ## Binary
 
 - **Build script**: `scripts/build-mips.sh` (handles all library rebuilds automatically)
-- **Docker image**: `ghcr.io/coreflake1/guppydev:latest` (this repo's own from-source replacement
-  for the upstream `ballaswag/guppydev` image this note originally referenced - see
-  [Building from Source](../wiki/Building-from-Source.md))
+- **Docker image**: `ballaswag/guppydev:latest` (what CI uses; `docker/Dockerfile` reproduces it
+  from source - see [Building from Source](../wiki/Building-from-Source.md))
 - **Toolchain**: `/toolchains/mips32el--musl--stable-2024.02-1/bin/mipsel-linux-`
 - **Flags**: `GUPPY_SMALL_SCREEN=1` required for 480×544
 - **Output**: `build/bin/guppyscreen`
@@ -76,22 +75,22 @@ ballaswag/guppyscreen          (original)
 - **Wrong installer**: `scripts/installer-deb.sh` — immediately exits with
   `"Found arch mips / Terminating"` on the KE. Do not use on this printer.
 
-**Install** (current branch is `ke-next`; see [Installation](../wiki/Installation.md) for the
+**Install** (see [Installation](../wiki/Installation.md) for the
 always-current command, including the `curl` fallback for printers whose `wget` can't complete a
 TLS handshake against GitHub):
 ```sh
-sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/coreflake1/guppyscreen/ke-next/scripts/installer.sh)"
+sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)"
 ```
 
 **Uninstall**:
 ```sh
-sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/coreflake1/guppyscreen/ke-next/scripts/installer.sh)" uninstall
+sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)" uninstall
 ```
 
 The installer always fetches from the branch URL (not from the tarball), so it is
 always the latest version of the script. `PINNED_RELEASE` in the script pins which tarball it
 downloads — see [Releases and Deployment](../wiki/Releases-and-Deployment.md) for the current tag
-and the `nightly-ke-next` testing flow.
+and how to pin a specific build.
 
 ---
 
