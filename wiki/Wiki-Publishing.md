@@ -2,8 +2,8 @@
 
 *(Developer doc.)* The pages you're reading live as Markdown in the **`wiki/` folder of the main repo**.
 That folder is the source of truth — edit it in a normal pull request like any other code. GitHub's
-**Wiki tab** (`github.com/coreflake1/guppyscreen/wiki`) is a *separate* git repository
-(`...guppyscreen.wiki.git`), so the files have to be copied across to actually appear there.
+**Wiki tab** (`github.com/alexholco/openke/wiki`) is a *separate* git repository
+(`...openke.wiki.git`), so the files have to be copied across to actually appear there.
 
 This page explains how that copy happens and the conventions to follow so it doesn't break.
 
@@ -49,7 +49,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-**Wiki edits made on `ke-next` (or any other branch) don't reach the public Wiki tab until that
+**Wiki edits made on any branch other than `main` don't reach the public Wiki tab until that
 branch actually merges into `main`** — normally at the next release cut. Nothing needs to be run by
 hand; just make sure `wiki/` changes are actually included in that merge.
 
@@ -60,7 +60,7 @@ push:
 
 ```sh
 # one-time: clone the wiki repo (must have at least one page created via the Wiki tab first)
-git clone https://github.com/coreflake1/guppyscreen.wiki.git /tmp/guppyke-wiki
+git clone https://github.com/alexholco/openke.wiki.git /tmp/guppyke-wiki
 
 # each publish:
 cp wiki/*.md /tmp/guppyke-wiki/

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Cross-compile guppyscreen for MIPS (Ingenic X2000, K1/KE)
-# Run inside ghcr.io/coreflake1/guppydev:latest Docker container
+# Run inside the ballaswag/guppydev:latest Docker container
 set -e
 
 CROSS_COMPILE="${CROSS_COMPILE:-mipsel-linux-}"

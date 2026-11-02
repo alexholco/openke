@@ -15,7 +15,7 @@ ASSET_NAME="guppyscreen"
 # raw.githubusercontent.com, fails with "TLS error from peer (alert code 80)").
 # Vendored + pinned to a commit SHA (not a branch) so this never depends on a
 # third-party repo's unpinned main branch, or on this branch's own history.
-CURL_BOOTSTRAP_URL="https://raw.githubusercontent.com/coreflake1/guppyscreen/4bf1ffa2e4ed473199805182c855dd61c1022735/scripts/vendor/curl-mipsel"
+CURL_BOOTSTRAP_URL="https://raw.githubusercontent.com/alexholco/openke/4bf1ffa2e4ed473199805182c855dd61c1022735/scripts/vendor/curl-mipsel"
 # Checked, not just "does a file already exist at this path" - a /tmp/curl left
 # over from a previous installer run (different OpenKE version, different pin)
 # used to be reused as-is forever, silently masking any curl-mipsel update.
@@ -490,7 +490,7 @@ if [ ! -d "$MOONRAKER_INSTALL_DIR" ] || [ ! -f "$MOONRAKER_INIT" ]; then
     fi
 
     printf "${green}  Downloading Moonraker...${white}\n"
-    if ! download_file "https://raw.githubusercontent.com/coreflake1/guppyscreen/670d99bea9a801bef7eb863e984146ef4c6b942c/scripts/vendor/moonraker.tar.gz" /tmp/moonraker.tar.gz; then
+    if ! download_file "https://raw.githubusercontent.com/alexholco/openke/670d99bea9a801bef7eb863e984146ef4c6b942c/scripts/vendor/moonraker.tar.gz" /tmp/moonraker.tar.gz; then
         printf "${red}  [FAIL] Could not download Moonraker — check your network and re-run the installer.${white}\n"
         exit 1
     fi
@@ -761,9 +761,9 @@ SFD_TARGET_VERSION="1.16.0"
 # The sha256 check is what makes a wheel already sitting in python_wheels safe
 # to reuse: download_file can leave a truncated file behind on failure, and a
 # re-run must not trust that just because the filename exists.
-MOONRAKER_WHEELS="pillow-10.4.0-cp38-cp38-linux_mips.whl https://raw.githubusercontent.com/coreflake1/guppyscreen/d49c2809996fab04ddac4bfbcda70d70bfba3140/scripts/vendor/wheels/pillow-10.4.0-cp38-cp38-linux_mips.whl 168f7144b97268b3e9e98b63304ca4fe72f5b6dc88a2dde561e6eb53fb85192b
-streaming_form_data-1.16.0-cp38-cp38-linux_mips.whl https://raw.githubusercontent.com/coreflake1/guppyscreen/d49c2809996fab04ddac4bfbcda70d70bfba3140/scripts/vendor/wheels/streaming_form_data-1.16.0-cp38-cp38-linux_mips.whl 16779fdbeba6a08b8e061c4ef1fd54310eaa0f91296a850e595d5c3a3f72f710
-smart_open-6.0.0-py3-none-any.whl https://raw.githubusercontent.com/coreflake1/guppyscreen/ae5e31105ceffb792f0355352d3c21f9e43e6df4/scripts/vendor/wheels/smart_open-6.0.0-py3-none-any.whl 94afbd5058a45d4fdc4f859ed158b46054cb5ca1c019d76f6f8a60495f662129"
+MOONRAKER_WHEELS="pillow-10.4.0-cp38-cp38-linux_mips.whl https://raw.githubusercontent.com/alexholco/openke/d49c2809996fab04ddac4bfbcda70d70bfba3140/scripts/vendor/wheels/pillow-10.4.0-cp38-cp38-linux_mips.whl 168f7144b97268b3e9e98b63304ca4fe72f5b6dc88a2dde561e6eb53fb85192b
+streaming_form_data-1.16.0-cp38-cp38-linux_mips.whl https://raw.githubusercontent.com/alexholco/openke/d49c2809996fab04ddac4bfbcda70d70bfba3140/scripts/vendor/wheels/streaming_form_data-1.16.0-cp38-cp38-linux_mips.whl 16779fdbeba6a08b8e061c4ef1fd54310eaa0f91296a850e595d5c3a3f72f710
+smart_open-6.0.0-py3-none-any.whl https://raw.githubusercontent.com/alexholco/openke/ae5e31105ceffb792f0355352d3c21f9e43e6df4/scripts/vendor/wheels/smart_open-6.0.0-py3-none-any.whl 94afbd5058a45d4fdc4f859ed158b46054cb5ca1c019d76f6f8a60495f662129"
 if [ -x "$MOONRAKER_PY" ] && [ -x "$MOONRAKER_PIP" ]; then
     mkdir -p "$MOONRAKER_WHEEL_DIR"
     _wheel_ok=1
@@ -863,7 +863,7 @@ if [ "$_nginx_ok" -eq 1 ] && [ -x /usr/data/nginx/sbin/nginx ]; then
     _nginx_installed_version=$(/usr/data/nginx/sbin/nginx -v 2>&1 | sed -n 's#.*nginx/##p')
     _nginx_check_dir="/tmp/.ke_nginx_check.$$"
     mkdir -p "$_nginx_check_dir"
-    if download_file "https://raw.githubusercontent.com/coreflake1/guppyscreen/8f1167e97ce5dd2d5fc20c315f4cdb9176a2cfdb/scripts/vendor/nginx.tar.gz" /tmp/nginx_check.tar.gz \
+    if download_file "https://raw.githubusercontent.com/alexholco/openke/8f1167e97ce5dd2d5fc20c315f4cdb9176a2cfdb/scripts/vendor/nginx.tar.gz" /tmp/nginx_check.tar.gz \
         && tar xf /tmp/nginx_check.tar.gz -C "$_nginx_check_dir" nginx/sbin/nginx 2>/dev/null; then
         _nginx_vendored_version=$("$_nginx_check_dir/nginx/sbin/nginx" -v 2>&1 | sed -n 's#.*nginx/##p')
         if [ -n "$_nginx_vendored_version" ] && [ "$_nginx_vendored_version" != "$_nginx_installed_version" ]; then
@@ -933,7 +933,7 @@ if [ "$_nginx_ok" -eq 0 ] || [ "$_mainsail_ok" -eq 0 ]; then
     if [ "$confirm_mainsail" != "n" ] && [ "$confirm_mainsail" != "N" ]; then
         if [ "$_nginx_ok" -eq 0 ]; then
             printf "${green}  Downloading Nginx...${white}\n"
-            if ! download_file "https://raw.githubusercontent.com/coreflake1/guppyscreen/8f1167e97ce5dd2d5fc20c315f4cdb9176a2cfdb/scripts/vendor/nginx.tar.gz" /tmp/nginx.tar.gz; then
+            if ! download_file "https://raw.githubusercontent.com/alexholco/openke/8f1167e97ce5dd2d5fc20c315f4cdb9176a2cfdb/scripts/vendor/nginx.tar.gz" /tmp/nginx.tar.gz; then
                 printf "${red}  [FAIL] Could not download Nginx — check your network and re-run the installer.${white}\n"
                 _nginx_ok=2
             fi
@@ -1086,19 +1086,19 @@ fi
 # kill pip cache to free up overlayfs
 rm -rf /root/.cache
 
-# Resolve the latest published stable release dynamically instead of a hardcoded
-# pin. GitHub's /releases/latest API skips prereleases/drafts, so the nightly
-# builds from plain pushes to main don't count — only an actual tagged release
-# does. This removes the "bump PINNED_RELEASE by hand at release time" step
-# entirely: forgetting it once already meant real users silently kept pulling a
-# stale, unpatched asset after a fix had already shipped in the repo.
+# Resolve the latest published release dynamically instead of a hardcoded pin.
+# Every PR merged into main publishes one (tagged pr<N>), and GitHub's
+# /releases/latest API returns the most recently published, skipping
+# prereleases/drafts. This removes the "bump PINNED_RELEASE by hand at release
+# time" step entirely: forgetting it once already meant real users silently kept
+# pulling a stale, unpatched asset after a fix had already shipped in the repo.
 #
-# Testers can opt into a specific tag (e.g. a nightly prerelease) by exporting
-# PINNED_RELEASE before running this script:
-#   PINNED_RELEASE=nightly-ke-next bash installer.sh
+# Testers can opt into a specific build by exporting PINNED_RELEASE before
+# running this script:
+#   PINNED_RELEASE=pr4 bash installer.sh
 # which skips this lookup entirely - default (unset) behavior is unchanged.
 if [ -z "$PINNED_RELEASE" ]; then
-    if download_file "https://api.github.com/repos/coreflake1/guppyscreen/releases/latest" /tmp/latest_release.json; then
+    if download_file "https://api.github.com/repos/alexholco/openke/releases/latest" /tmp/latest_release.json; then
         PINNED_RELEASE=$(jq -r '.tag_name // empty' /tmp/latest_release.json 2>/dev/null)
         rm -f /tmp/latest_release.json
     fi
@@ -1108,7 +1108,7 @@ if [ -z "$PINNED_RELEASE" ]; then
     fi
 fi
 printf "${green} Using OpenKE release: $PINNED_RELEASE ${white}\n"
-ASSET_URL="https://github.com/coreflake1/guppyscreen/releases/download/${PINNED_RELEASE}/$ASSET_NAME.tar.gz"
+ASSET_URL="https://github.com/alexholco/openke/releases/download/${PINNED_RELEASE}/$ASSET_NAME.tar.gz"
 
 printf "${green} Downloading asset: $ASSET_NAME.tar.gz ${white}\n"
 
@@ -1978,7 +1978,7 @@ if [ $? -eq 0 ]; then
         printf "${green}  Mainsail web UI:  http://${_ip}:4409/\n${white}"
     fi
     printf "${green}  Backups saved to: $BACKUP_DIR\n${white}"
-    printf "${yellow}  Next steps and calibration guide: https://github.com/coreflake1/guppyscreen/wiki\n${white}"
+    printf "${yellow}  Next steps and calibration guide: https://github.com/alexholco/openke/wiki\n${white}"
 else
     printf "${red}GuppyScreen failed to start. Rolling back...${white}\n"
     cp $BACKUP_DIR/S99start_app /etc/init.d/S99start_app

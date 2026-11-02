@@ -17,7 +17,7 @@
 SSH into your printer and run:
 
 ```sh
-sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/coreflake1/guppyscreen/main/scripts/installer.sh)"
+sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)"
 ```
 
 > **Use `installer.sh`, not `installer-deb.sh`.** The `-deb` variant targets aarch64/systemd/Debian
@@ -181,33 +181,27 @@ backups give you a restore point regardless.
 > `printer.cfg` and erase Klipper-side files) — that's true of any Klipper mod, not OpenKE specifically.
 > After a firmware update, re-run the installer and re-run the affected calibrations.
 
-## Testing bleeding-edge builds (`ke-next` nightly)
+## Installing a specific build
 
-> ⚠️ **Unstable, for testers only.** `ke-next` is the active development branch — it can contain
-> half-finished or experimental work between releases. Don't run this on a printer you rely on for
-> real prints unless you're comfortable recovering it yourself (see [Uninstall](#uninstall) below,
-> or just re-run the normal install command to go back to the latest stable release).
-
-Every push to `ke-next` builds automatically and publishes to a moving `nightly-ke-next` prerelease
-tag on GitHub. To install the latest one, fetch `installer.sh` from `ke-next` itself (not `main`) and
-pin the release tag:
+Every pull request merged into `main` builds automatically and publishes a release tagged `pr<N>`
+on GitHub. The normal install command (and **Settings → Update Guppy** on the screen) always installs
+the newest release. To install a particular one instead, pin its tag:
 
 ```sh
-PINNED_RELEASE=nightly-ke-next sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/coreflake1/guppyscreen/ke-next/scripts/installer.sh)"
+PINNED_RELEASE=pr4 sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)"
 ```
 
-Check which commit you're actually running from the on-screen Tune → System Info panel — the
-version string is `nightly-<commit sha>`. Cross-reference that sha against
-[the nightly-ke-next release page](https://github.com/coreflake1/guppyscreen/releases/tag/nightly-ke-next)
-or `ke-next`'s commit history to see what changed.
+Check which build you're running from the on-screen Tune → System Info panel — the version string is
+`pr<N>-<commit sha>`. The [Releases page](https://github.com/alexholco/openke/releases) lists every
+build and the pull request it came from.
 
-To go back to the latest stable release, just run the normal [install command](#install) again
-(no `PINNED_RELEASE`) — it always resolves the latest actual tagged release, never a prerelease.
+To go back to the newest release, run the normal [install command](#install) again (no
+`PINNED_RELEASE`).
 
 ## Uninstall
 
 ```sh
-sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/coreflake1/guppyscreen/main/scripts/installer.sh)" uninstall
+sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)" uninstall
 ```
 
 Uninstall stops GuppyScreen, removes `/etc/init.d/S99guppyscreen`, restores `S12boot_display` and

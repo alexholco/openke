@@ -28,8 +28,8 @@ Assistant, Obico…), point that app at the stock camera instead.
 ## First, the name: GuppyKE → OpenKE
 
 Same project, new name. Older releases were tagged `vX.Y-GuppyKE`; new ones are `vX.Y-OpenKE`. You'll
-still see `GuppyKE` in a few file names and older messages — it's the same thing. The repo URL is
-**unchanged** (`coreflake1/guppyscreen`), so your in-app updater keeps working without any action.
+still see `GuppyKE` in a few file names and older messages — it's the same thing. This fork's builds
+come from **`alexholco/openke`**, and its in-app updater checks that repo's releases.
 
 ## Will I lose my settings or have to recalibrate?
 

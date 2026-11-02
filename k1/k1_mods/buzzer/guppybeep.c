@@ -10,7 +10,7 @@
  *   guppybeep m300 S<freq> P<ms>           Klipper M300 (S=freq Hz, P=ms); defaults S1000 P100
  *   guppybeep rtttl "<rtttl-string>"       play an RTTTL song
  *
- * Build: docker run --rm -v /tmp:/t -w /t ghcr.io/coreflake1/guppydev:latest \
+ * Build: docker run --rm -v /tmp:/t -w /t ballaswag/guppydev:latest \
  *          mipsel-linux-gcc -O2 -static -o guppybeep guppybeep.c
  */
 #include <stdio.h>

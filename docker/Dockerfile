@@ -7,11 +7,11 @@
 # pinned by version and SHA256, and auditable.
 #
 # Build:
-#   docker build -t ghcr.io/coreflake1/guppydev:latest docker/
+#   docker build -t guppydev:local docker/
 #
 # Use (cross-compile for the KE):
 #   docker run --rm -it -v "$PWD":/work -w /work \
-#     ghcr.io/coreflake1/guppydev:latest bash scripts/build-mips.sh
+#     guppydev:local bash scripts/build-mips.sh
 #
 # Toolchains provided on PATH:
 #   - mipsel-buildroot-linux-musl-  (Bootlin mips32el musl, gcc 12.3.0) + mipsel-linux- alias
@@ -61,6 +61,6 @@ ENV PATH=/toolchains/${ARM_TOOLCHAIN}/bin:/toolchains/${MIPS_TOOLCHAIN}/bin:/usr
 
 LABEL org.opencontainers.image.title="GuppyScreen cross toolchain" \
       org.opencontainers.image.description="Ubuntu 22.04 + mipsel-musl (Bootlin) and aarch64-none-linux-gnu (Arm) toolchains for building GuppyScreen." \
-      org.opencontainers.image.source="https://github.com/coreflake1/guppyscreen"
+      org.opencontainers.image.source="https://github.com/alexholco/openke"
 
 CMD ["/bin/bash"]

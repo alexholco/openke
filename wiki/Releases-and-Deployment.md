@@ -2,25 +2,30 @@
 
 ## CI pipeline
 
-Release artifacts are produced by `.github/workflows/build.yml`, which runs inside the
-`ghcr.io/coreflake1/guppydev:latest` toolchain container (built from
-[`docker/Dockerfile`](https://github.com/coreflake1/guppyscreen/blob/main/docker/Dockerfile)) on
-pushes to `main`/`develop` (nightly prerelease) and on tags (stable release). The workflow checks out submodules, applies the three patches, builds the bundled
-libraries, builds GuppyScreen, then packages each asset with `scripts/release.sh`.
+Two workflows build GuppyScreen, both inside the public `ballaswag/guppydev:latest` toolchain
+container ([`docker/Dockerfile`](https://github.com/alexholco/openke/blob/main/docker/Dockerfile)
+reproduces it from source). Each checks out submodules, applies the three patches in `patches/`
+(lv_drivers, spdlog, lvgl), builds the bundled libraries, builds GuppyScreen, then packages each
+asset with `scripts/release.sh`.
+
+- **`pull_request.yml`** runs on every pull request into `main`. It builds all four variants
+  (KE small screen, standard screen, Z-Bolt icons, aarch64) as a compile check and uploads them as
+  workflow artifacts. Nothing is published.
+- **`build.yml`** runs only when a pull request is **merged** into `main`. It builds the merge commit
+  and publishes a GitHub release (see below).
+
+Nothing is built on plain pushes, and there are no nightly releases.
 
 ### Build output
 
-This is a KE-focused fork, so CI builds **only the Ender-3 V3 KE asset**:
+This is a KE-focused fork, so releases carry **only the Ender-3 V3 KE asset**:
 
 | Asset | Toolchain | Theme | Small screen | Notes |
 |---|---|---|---|---|
 | `guppyscreen-smallscreen.tar.gz` | `mipsel-buildroot-linux-musl-` | material | **yes** | **The Ender-3 V3 KE asset** |
 
-- Non-tag pushes set `GUPPYSCREEN_VERSION=nightly-<sha>` and publish a `nightly` prerelease.
-- Tag pushes set `GUPPYSCREEN_VERSION=<tag>` and publish a stable release with generated notes.
-
-> The toolchain image still ships an aarch64 cross-compiler, so other targets (standard-screen K1,
-> Z-Bolt icons, aarch64) can be built manually if ever needed — they're just not released.
+- `GUPPYSCREEN_VERSION` is `pr<N>-<sha7>`: the merged PR's number and the merge commit.
+- The release is tagged `pr<N>` and named after the PR.
 
 ## Packaging locally
 
@@ -43,23 +48,25 @@ The on-printer installer downloads the matching `*.tar.gz` from the GitHub relea
 
 ## Release tags
 
-Stable releases are tagged `vX.Y.Z-OpenKE` on `main` (e.g. `v1.5.0-OpenKE`) — check the
-[GitHub Releases page](https://github.com/coreflake1/guppyscreen/releases) for the current one
-rather than trusting a version number hardcoded in this doc, since it goes stale fast. Earlier
-pre-rename tags (`v0.1.1-ke-gui-fixes`, `v0.1.0-ke-bedmesh`, the `0.0.x-beta` series) exist further
-back in the repository history from before the `-OpenKE` naming convention.
+Each merged pull request publishes one release tagged `pr<N>`. PR numbers don't follow merge order
+(a PR opened earlier can be merged later), so "newest" means most recently **published**, which is
+what GitHub's latest-release API returns. Both the installer and the on-screen updater (`update.sh`)
+use that API; the updater installs the latest release whenever its tag differs from the installed
+version's `pr<N>` prefix. See the [Releases page](https://github.com/alexholco/openke/releases).
 
-### Testing an unreleased `ke-next` build
+Older tags from before this fork (`vX.Y.Z-OpenKE`, `v0.1.1-ke-gui-fixes`, the `0.0.x-beta`
+series) remain in the repository history.
 
-Every push to `ke-next` also publishes a moving `nightly-ke-next` prerelease (same CI, see
-`.github/workflows` for the exact build job name). To try it before it's merged to `main`:
+### Installing a specific build
+
+Pin any release tag with `PINNED_RELEASE`:
 
 ```sh
-PINNED_RELEASE=nightly-ke-next sh -c "$(curl -sL https://raw.githubusercontent.com/coreflake1/guppyscreen/ke-next/scripts/installer.sh)"
+PINNED_RELEASE=pr4 sh -c "$(curl -sL https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)"
 ```
 
 (Use `curl`, not the `wget` form shown elsewhere in this wiki, if your printer's `wget` can't
 complete a TLS handshake against GitHub — see [Troubleshooting](Troubleshooting).) Re-run the
-normal install command with no `PINNED_RELEASE` to go back to the latest stable release.
+normal install command with no `PINNED_RELEASE` to go back to the newest release.
 
 See **[Troubleshooting](Troubleshooting)** for current installer/upgrade caveats.

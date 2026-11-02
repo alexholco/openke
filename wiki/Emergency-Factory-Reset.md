@@ -57,7 +57,7 @@ If you can SSH in but want a clean slate:
 The printer boots into stock Creality firmware. Re-run the OpenKE installer to get back up:
 
 ```sh
-sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/coreflake1/guppyscreen/main/scripts/installer.sh)"
+sh -c "$(wget --no-check-certificate -qO - https://raw.githubusercontent.com/alexholco/openke/main/scripts/installer.sh)"
 ```
 
 See [Installation](Installation) for the full guide.
