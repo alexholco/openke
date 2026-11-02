@@ -80,12 +80,20 @@ real hardware**, not just built:
   `name`/`version` as plain kwargs) and zero external library dependencies (just its own
   pre-generated `_parser.c`) — built clean on the first attempt, real confirmation the
   Pillow-proven toolchain is genuinely reusable rather than a one-off.
-- **Both wheels are wired into `scripts/installer.sh`'s real in-place upgrade path** (search
-  `PILLOW_TARGET_VERSION`): on install/update it checks the currently-installed Pillow/
-  streaming-form-data versions against the target, and if either is behind, downloads the
-  matching wheels from a **pinned commit** (not a moving branch — a wheel filename that used to
-  get silently reused forever otherwise) and installs them via
-  `pip install --no-index --find-links=<dir>`. **Real gotcha, since fixed**: the wheels are
+- **Both wheels are wired into `scripts/installer.sh`** (search `PILLOW_TARGET_VERSION`), for
+  **fresh and existing Moonraker installs alike**. It keeps the wheels (plus `smart_open`, a
+  required dependency of streaming-form-data 1.16.0) in Moonraker's own
+  `moonraker/scripts/python_wheels/`, each downloaded from a **pinned commit** (not a moving
+  branch) and verified against a sha256 so a truncated leftover is re-fetched instead of reused.
+  It then checks the installed Pillow/streaming-form-data versions against the target and, if
+  either is behind, installs them via `pip install --no-index --find-links=<that dir>`. This runs
+  without a prompt right after a fresh Moonraker install, and asks first on an existing one.
+  **Why `python_wheels/` specifically:** Moonraker's `moonraker-requirements.txt` starts with
+  `--find-links=python_wheels`, so Mainsail's "Update Moonraker" pip step resolves these wheels
+  instead of the PyPI sdists. Without them there it tries to compile Pillow on the device (no
+  compiler), fails three times, and restarts Moonraker's new code on the old deps. That's what
+  happened to every fresh install until 2026-10-28, because this step used to run only on the
+  already-installed branch. **Real gotcha, since fixed**: the wheels are
   built and named with the `linux_mipsel` platform tag (matching the interpreter's own C-extension
   import convention), but this device's `pip` specifically wants `linux_mips` (no "el") in the
   *wheel filename* to accept it as installable — the two mechanisms disagree on the tag, confirmed

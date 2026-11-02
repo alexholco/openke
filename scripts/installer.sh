@@ -476,6 +476,7 @@ fi
 echo "Checking for Moonraker"
 MOONRAKER_INSTALL_DIR=/usr/data/moonraker
 MOONRAKER_INIT=/etc/init.d/S56moonraker_service
+MOONRAKER_FRESH=0
 
 if [ ! -d "$MOONRAKER_INSTALL_DIR" ] || [ ! -f "$MOONRAKER_INIT" ]; then
     printf "${yellow}[MISSING] Moonraker not found${white}\n"
@@ -692,6 +693,7 @@ MOONRAKER_CONF_EOF
     /etc/init.d/S56moonraker_service start
     if wait_for_moonraker; then
         printf "${green}  [OK] Moonraker installed and started${white}\n"
+        MOONRAKER_FRESH=1
     else
         printf "${red}  [FAIL] Moonraker was installed but never responded on port 7125.${white}\n"
         printf "${red}  Check /usr/data/printer_data/logs/moonraker.log and re-run the installer if needed.${white}\n"
@@ -717,21 +719,76 @@ else
             exit 1
         fi
     fi
+fi
 
-    # Upgrade path: moonraker.tar.gz's vendored Pillow/streaming-form-data
-    # wheels only ever get picked up during a completely fresh Moonraker
-    # install (the branch above) - an already-installed Moonraker never
-    # re-extracts that tarball, so a newer vendored wheel would otherwise sit
-    # unused forever (found 2026-07-18 - a real device kept PIL 7.0.0 /
-    # streaming-form-data 1.8.1 through multiple reinstalls after this repo
-    # started vendoring 10.4.0/1.16.0). A narrow, in-place pip upgrade of just
-    # these two packages, not a full re-extraction of the Moonraker tree -
-    # that would risk clobbering moonraker.conf/database/other real state.
-    MOONRAKER_PY="$MOONRAKER_INSTALL_DIR/moonraker-env/bin/python"
-    MOONRAKER_PIP="$MOONRAKER_INSTALL_DIR/moonraker-env/bin/pip"
-    PILLOW_TARGET_VERSION="10.4.0"
-    SFD_TARGET_VERSION="1.16.0"
-    if [ -x "$MOONRAKER_PY" ] && [ -x "$MOONRAKER_PIP" ]; then
+# Moonraker's compiled Python deps: Pillow and streaming-form-data. Neither the
+# vendored moonraker-env nor the KE firmware has a version new enough for current
+# Moonraker - the venv falls back to the firmware's own system site-packages
+# (PIL 7.0.0 / streaming-form-data 1.8.1) - and the KE has no C compiler to
+# build them. This used to run only on the already-installed branch above, so a
+# fresh install never got the wheels at all; the first "Update Moonraker" from
+# Mainsail then had pip try to build Pillow 10.4.0 -> 10.1.0 and
+# streaming-form-data from source, fail, retry the whole thing three times and
+# restart Moonraker's new code on the old deps (hit for real 2026-10-28, fresh
+# install, Moonraker v0.10.0 -> v0.11.0). Now runs for both branches:
+#  1. Keep our cross-compiled wheels in Moonraker's own scripts/python_wheels/.
+#     moonraker-requirements.txt starts with --find-links=python_wheels, so its
+#     updater's pip resolves these wheels instead of the PyPI sdists from then
+#     on (10.4.0 / 1.16.0 are also the newest versions pip will pick on the
+#     device's Python 3.8). git leaves these untracked files alone across
+#     Moonraker updates.
+#  2. pip-install them into the venv if the installed versions are behind -
+#     without asking on a fresh install (the user just said yes to Moonraker),
+#     asking first on an existing one.
+MOONRAKER_PY="$MOONRAKER_INSTALL_DIR/moonraker-env/bin/python"
+MOONRAKER_PIP="$MOONRAKER_INSTALL_DIR/moonraker-env/bin/pip"
+MOONRAKER_WHEEL_DIR="$MOONRAKER_INSTALL_DIR/moonraker/scripts/python_wheels"
+PILLOW_TARGET_VERSION="10.4.0"
+SFD_TARGET_VERSION="1.16.0"
+# One "filename url sha256" per line. pip's --find-links resolver parses the
+# package name/version/ABI/platform straight out of the wheel's FILENAME - a
+# renamed generic "pillow.whl" doesn't match anything ("no matching
+# distribution", hit 2026-07-18) - so these must stay canonical. The platform
+# tag is "linux_mips", not "linux_mipsel": this device's pip reports its own
+# platform that way (via sysconfig/platform.machine()) even though the
+# interpreter's own C-extension import machinery (EXTENSION_SUFFIXES, used for
+# e.g. ft2font) says mipsel - confirmed via direct testing 2026-07-18.
+# smart_open is there because streaming-form-data 1.16.0 unconditionally
+# declares "Requires-Dist: smart-open>=6.0" (for an S3Target feature Moonraker
+# never uses, but pip enforces it regardless) - without it a --no-index install
+# fails with "no matching distribution" for smart-open (hit 2026-07-18). Pure
+# Python, no cross-compilation needed.
+# The sha256 check is what makes a wheel already sitting in python_wheels safe
+# to reuse: download_file can leave a truncated file behind on failure, and a
+# re-run must not trust that just because the filename exists.
+MOONRAKER_WHEELS="pillow-10.4.0-cp38-cp38-linux_mips.whl https://raw.githubusercontent.com/coreflake1/guppyscreen/d49c2809996fab04ddac4bfbcda70d70bfba3140/scripts/vendor/wheels/pillow-10.4.0-cp38-cp38-linux_mips.whl 168f7144b97268b3e9e98b63304ca4fe72f5b6dc88a2dde561e6eb53fb85192b
+streaming_form_data-1.16.0-cp38-cp38-linux_mips.whl https://raw.githubusercontent.com/coreflake1/guppyscreen/d49c2809996fab04ddac4bfbcda70d70bfba3140/scripts/vendor/wheels/streaming_form_data-1.16.0-cp38-cp38-linux_mips.whl 16779fdbeba6a08b8e061c4ef1fd54310eaa0f91296a850e595d5c3a3f72f710
+smart_open-6.0.0-py3-none-any.whl https://raw.githubusercontent.com/coreflake1/guppyscreen/ae5e31105ceffb792f0355352d3c21f9e43e6df4/scripts/vendor/wheels/smart_open-6.0.0-py3-none-any.whl 94afbd5058a45d4fdc4f859ed158b46054cb5ca1c019d76f6f8a60495f662129"
+if [ -x "$MOONRAKER_PY" ] && [ -x "$MOONRAKER_PIP" ]; then
+    mkdir -p "$MOONRAKER_WHEEL_DIR"
+    _wheel_ok=1
+    _wheel_list="/tmp/.ke_wheels.$$"
+    printf '%s\n' "$MOONRAKER_WHEELS" > "$_wheel_list"
+    while read -r _whl _whl_url _whl_sha; do
+        _whl_path="$MOONRAKER_WHEEL_DIR/$_whl"
+        if [ "$(sha256sum "$_whl_path" 2>/dev/null | awk '{print $1}')" = "$_whl_sha" ]; then
+            continue
+        fi
+        rm -f "$_whl_path"
+        if download_file "$_whl_url" "$_whl_path.part" \
+            && [ "$(sha256sum "$_whl_path.part" 2>/dev/null | awk '{print $1}')" = "$_whl_sha" ]; then
+            mv "$_whl_path.part" "$_whl_path"
+        else
+            rm -f "$_whl_path.part"
+            _wheel_ok=0
+        fi
+    done < "$_wheel_list"
+    rm -f "$_wheel_list"
+
+    if [ "$_wheel_ok" -ne 1 ]; then
+        printf "${red}  [FAIL] Could not download Moonraker's prebuilt Pillow/streaming-form-data wheels -${white}\n"
+        printf "${red}  check your network and re-run. Until then, updating Moonraker from Mainsail will fail.${white}\n"
+    else
         _pillow_installed=$("$MOONRAKER_PY" -c "import PIL; print(PIL.__version__)" 2>/dev/null)
         _sfd_installed=$("$MOONRAKER_PIP" show streaming-form-data 2>/dev/null | sed -n 's/^Version: //p')
         _need_pillow=0; _need_sfd=0
@@ -739,69 +796,35 @@ else
         [ "$_sfd_installed" != "$SFD_TARGET_VERSION" ] && _need_sfd=1
         if [ "$_need_pillow" -eq 1 ] || [ "$_need_sfd" -eq 1 ]; then
             _upgrade_msg=""
-            [ "$_need_pillow" -eq 1 ] && _upgrade_msg="Pillow $_pillow_installed -> $PILLOW_TARGET_VERSION"
-            [ "$_need_sfd" -eq 1 ] && _upgrade_msg="${_upgrade_msg:+$_upgrade_msg, }streaming-form-data $_sfd_installed -> $SFD_TARGET_VERSION"
-            printf "${yellow}[UPGRADE AVAILABLE] $_upgrade_msg${white}\n"
-            printf "Upgrade Moonraker's Python dependencies now? [Y/n]: "
-            read confirm_pywheel_upgrade
-            echo
+            [ "$_need_pillow" -eq 1 ] && _upgrade_msg="Pillow ${_pillow_installed:-none} -> $PILLOW_TARGET_VERSION"
+            [ "$_need_sfd" -eq 1 ] && _upgrade_msg="${_upgrade_msg:+$_upgrade_msg, }streaming-form-data ${_sfd_installed:-none} -> $SFD_TARGET_VERSION"
+            if [ "$MOONRAKER_FRESH" -eq 1 ]; then
+                printf "${green}  Installing Moonraker's Python dependencies ($_upgrade_msg)...${white}\n"
+                confirm_pywheel_upgrade="y"
+            else
+                printf "${yellow}[UPGRADE AVAILABLE] $_upgrade_msg${white}\n"
+                printf "Upgrade Moonraker's Python dependencies now? [Y/n]: "
+                read confirm_pywheel_upgrade
+                echo
+            fi
             if [ "$confirm_pywheel_upgrade" != "n" ] && [ "$confirm_pywheel_upgrade" != "N" ]; then
-                _wheel_dir="/tmp/.ke_wheels.$$"
-                mkdir -p "$_wheel_dir"
-                _wheel_ok=1
-                if [ "$_need_pillow" -eq 1 ]; then
-                    # pip's --find-links resolver parses the package
-                    # name/version/ABI/platform straight out of the wheel's
-                    # FILENAME - a renamed generic "pillow.whl" doesn't match
-                    # anything and pip reports "no matching distribution"
-                    # even though the file downloaded fine (hit for real
-                    # 2026-07-18). Must keep the canonical wheel filename.
-                    # Filename's platform tag matters here (pip's --find-links
-                    # resolver filters by it) - this device's pip reports its
-                    # own platform as "linux_mips" (via sysconfig/platform.machine()),
-                    # NOT "linux_mipsel", despite the Python interpreter's own
-                    # C-extension import machinery (EXTENSION_SUFFIXES, used for
-                    # e.g. ft2font) using "mipsel" - the two mechanisms read
-                    # different platform strings and disagree on this device.
-                    # Confirmed via direct testing 2026-07-18: renaming just the
-                    # wheel's filename tag (not its actual binary content, which
-                    # is unaffected either way) is what pip needs to accept it.
-                    download_file "https://raw.githubusercontent.com/coreflake1/guppyscreen/d49c2809996fab04ddac4bfbcda70d70bfba3140/scripts/vendor/wheels/pillow-10.4.0-cp38-cp38-linux_mips.whl" "$_wheel_dir/pillow-10.4.0-cp38-cp38-linux_mips.whl" || _wheel_ok=0
-                fi
-                if [ "$_need_sfd" -eq 1 ]; then
-                    download_file "https://raw.githubusercontent.com/coreflake1/guppyscreen/d49c2809996fab04ddac4bfbcda70d70bfba3140/scripts/vendor/wheels/streaming_form_data-1.16.0-cp38-cp38-linux_mips.whl" "$_wheel_dir/streaming_form_data-1.16.0-cp38-cp38-linux_mips.whl" || _wheel_ok=0
-                    # streaming-form-data 1.16.0 unconditionally declares
-                    # "Requires-Dist: smart-open>=6.0" in its own wheel
-                    # metadata (needed for an S3Target feature Moonraker
-                    # never actually uses, but pip enforces it regardless) -
-                    # without this in --find-links too, pip fails with
-                    # "no matching distribution" for smart-open specifically
-                    # (hit for real 2026-07-18). Pure Python (py3-none-any) -
-                    # no cross-compilation needed, just vendored directly.
-                    download_file "https://raw.githubusercontent.com/coreflake1/guppyscreen/ae5e31105ceffb792f0355352d3c21f9e43e6df4/scripts/vendor/wheels/smart_open-6.0.0-py3-none-any.whl" "$_wheel_dir/smart_open-6.0.0-py3-none-any.whl" || _wheel_ok=0
-                fi
-                if [ "$_wheel_ok" -eq 1 ]; then
-                    /etc/init.d/S56moonraker_service stop 2>/dev/null
-                    "$MOONRAKER_PIP" install --no-index --find-links="$_wheel_dir" "pillow==$PILLOW_TARGET_VERSION" "streaming-form-data==$SFD_TARGET_VERSION"
-                    _pip_rc=$?
-                    /etc/init.d/S56moonraker_service start 2>/dev/null
-                    # Wait for it to actually come back up before continuing -
-                    # later code in this script queries Moonraker's own API to
-                    # resolve klipper_path/config_file, and without this it can
-                    # race ahead of a still-restarting Moonraker and silently
-                    # fall back to hardcoded defaults instead (hit for real
-                    # 2026-07-18 - harmless here since the defaults happened to
-                    # be correct on this device, but not guaranteed elsewhere).
-                    wait_for_moonraker >/dev/null 2>&1
-                    if [ "$_pip_rc" -eq 0 ]; then
-                        printf "${green}  [OK] Moonraker Python dependencies upgraded${white}\n"
-                    else
-                        printf "${red}  [FAIL] pip install failed - Moonraker restarted with whatever was there before${white}\n"
-                    fi
+                /etc/init.d/S56moonraker_service stop 2>/dev/null
+                "$MOONRAKER_PIP" install --no-index --find-links="$MOONRAKER_WHEEL_DIR" "pillow==$PILLOW_TARGET_VERSION" "streaming-form-data==$SFD_TARGET_VERSION"
+                _pip_rc=$?
+                /etc/init.d/S56moonraker_service start 2>/dev/null
+                # Wait for it to actually come back up before continuing -
+                # later code in this script queries Moonraker's own API to
+                # resolve klipper_path/config_file, and without this it can
+                # race ahead of a still-restarting Moonraker and silently
+                # fall back to hardcoded defaults instead (hit for real
+                # 2026-07-18 - harmless here since the defaults happened to
+                # be correct on this device, but not guaranteed elsewhere).
+                wait_for_moonraker >/dev/null 2>&1
+                if [ "$_pip_rc" -eq 0 ]; then
+                    printf "${green}  [OK] Moonraker Python dependencies upgraded${white}\n"
                 else
-                    printf "${red}  [FAIL] Could not download the updated wheel(s) - check your network and re-run.${white}\n"
+                    printf "${red}  [FAIL] pip install failed - Moonraker restarted with whatever was there before${white}\n"
                 fi
-                rm -rf "$_wheel_dir"
             fi
         fi
     fi
