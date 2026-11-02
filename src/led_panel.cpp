@@ -78,19 +78,12 @@ void LedPanel::init(json &l) {
       led_cb = &LedPanel::_handle_led_update_generic;
     }
 
-    bool is_binary = false;
-    if (key.rfind("output_pin ", 0) == 0) {
-      std::string lower = key;
-      std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-      auto pwm = State::get_instance()->get_data(
-        json::json_pointer("/printer_state/configfile/settings/" + lower + "/pwm"));
-      is_binary = pwm.is_boolean() ? !pwm.template get<bool>() : true;
-    }
-
     auto lptr = std::make_shared<SliderContainer>(leds_cont, display_name.c_str(), &cancel, "Off",
-      &light_img, is_binary ? "On" : "Max", led_cb, this);
-    if (is_binary) {
-      lptr->hide_slider();
+      &light_img, "Max", led_cb, this);
+    // configfile isn't loaded yet at init, so output_pins start as on/off;
+    // foreground() reveals the slider once pwm: True is known.
+    if (key.rfind("output_pin ", 0) == 0) {
+      lptr->set_binary(true);
     }
     leds.insert({key, lptr});
   }
@@ -113,6 +106,15 @@ void LedPanel::init(json &l) {
 
 void LedPanel::foreground() {
   for (auto &l : leds) {
+    if (l.first.rfind("output_pin ", 0) == 0) {
+      std::string lower = l.first;
+      std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+      auto pwm = State::get_instance()->get_data(
+        json::json_pointer("/printer_state/configfile/settings/" + lower + "/pwm"));
+      // output_pin defaults to non-PWM (binary) unless pwm: True is configured
+      l.second->set_binary(pwm.is_boolean() ? !pwm.template get<bool>() : true);
+    }
+
     // hack for output_pin leds
     auto led_value = State::get_instance()
       ->get_data(json::json_pointer(fmt::format("/printer_state/{}/value", l.first)));

@@ -142,9 +142,16 @@ void SliderContainer::set_range(int min_range, int max_range) {
   lv_slider_set_range(slider, min_range, max_range);
 }
 
-void SliderContainer::hide_slider() {
-  lv_obj_add_flag(slider_cont, LV_OBJ_FLAG_HIDDEN);
-  lv_obj_set_flex_align(control_cont, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+void SliderContainer::set_binary(bool binary) {
+  if (binary) {
+    lv_obj_add_flag(slider_cont, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_flex_align(control_cont, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    max_btn.set_text("On");
+  } else {
+    lv_obj_clear_flag(slider_cont, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_set_flex_align(control_cont, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    max_btn.set_text("Max");
+  }
 }
 
 void SliderContainer::update_value(int value) {

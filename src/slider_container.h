@@ -47,7 +47,8 @@ class SliderContainer {
   lv_obj_t *get_max();
 
   void set_range(int min_range, int max_range);
-  void hide_slider();
+  // binary: hide the slider and relabel max as "On"; otherwise show it as "Max"
+  void set_binary(bool binary);
 
   void update_value(int value);
 
