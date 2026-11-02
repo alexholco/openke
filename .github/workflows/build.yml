@@ -1,17 +1,17 @@
 name: guppy build
 
+# Builds and publishes a release only when a PR is merged into main.
 on:
-  push:
-    branches: [ "main", "develop", "ke-next" ]
-    tags:
-      - "*"
+  pull_request:
+    types: [ closed ]
+    branches: [ "main" ]
 
 permissions:
   contents: write
-  packages: read
 
 jobs:
   build:
+    if: github.event.pull_request.merged == true
     strategy:
       matrix:
         include:
@@ -25,13 +25,8 @@ jobs:
 
     runs-on: ubuntu-22.04
     container:
-      # Self-hosted cross toolchain (see docker/Dockerfile). Reproduces the
-      # upstream ballaswag/guppydev image. `credentials` lets the job pull it
-      # while the ghcr package is private; harmless once it is made public.
-      image: ghcr.io/coreflake1/guppydev:latest
-      credentials:
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      # Public upstream cross toolchain (same image as pull_request.yml).
+      image: ballaswag/guppydev:latest
       options: --user 1001
 
     env:
@@ -41,30 +36,17 @@ jobs:
       GUPPY_THEME: ${{ matrix.theme }}
 
     steps:
+    # Build the merge commit that landed on main.
     - uses: actions/checkout@v6
       with:
+        ref: ${{ github.event.pull_request.merge_commit_sha }}
         submodules: recursive
 
-    - if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
-      name: set guppyscreen nightly version
+    - name: set guppyscreen version
       run: |
-        echo "GUPPYSCREEN_VERSION=nightly-${{ github.sha }}" >> $GITHUB_ENV
-
-    # ke-next gets its own moving prerelease tag so its nightly never
-    # overwrites main's - every other ref (main, develop, and tag pushes)
-    # keeps the original shared "nightly" tag unchanged.
-    - name: set nightly channel
-      run: |
-        if [ "${{ github.ref_name }}" = "ke-next" ]; then
-          echo "NIGHTLY_TAG=nightly-ke-next" >> $GITHUB_ENV
-        else
-          echo "NIGHTLY_TAG=nightly" >> $GITHUB_ENV
-        fi
-
-    - if: startsWith(github.ref, 'refs/tags/')
-      name: set guppyscreen release version
-      run: |
-        echo "GUPPYSCREEN_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+        SHORT_SHA=$(echo "${{ github.event.pull_request.merge_commit_sha }}" | cut -c1-7)
+        echo "GUPPYSCREEN_VERSION=pr${{ github.event.pull_request.number }}-${SHORT_SHA}" >> $GITHUB_ENV
+        echo "RELEASE_TAG=pr${{ github.event.pull_request.number }}" >> $GITHUB_ENV
 
     - if: matrix.small
       name: export screen size
@@ -81,8 +63,10 @@ jobs:
       run: |
         echo "EVDEV_CALIBRATE=${{ matrix.calibrate }}" >> $GITHUB_ENV
 
-    # lv_drivers carries its KE patches in the coreflake1/lv_drivers fork
-    # (see .gitmodules); no build-time patch needed.
+    - name: patch KE framebuffer/touch fixes in lv_drivers
+      run: |
+        git apply ../patches/0001-lv_drivers-ke.patch
+      working-directory: ./lv_drivers
 
     - name: patch fmt in spdlog
       run: |
@@ -122,19 +106,12 @@ jobs:
         name: ${{ matrix.asset }}
         path: ./${{ matrix.asset }}.tar.gz
 
-    - name: nightly release
+    - name: release
       uses: softprops/action-gh-release@v3
       with:
-        prerelease: true
-        name: ${{ env.NIGHTLY_TAG }}
-        tag_name: ${{ env.NIGHTLY_TAG }}
+        name: "${{ env.GUPPYSCREEN_VERSION }}: ${{ github.event.pull_request.title }}"
+        tag_name: ${{ env.RELEASE_TAG }}
+        target_commitish: ${{ github.event.pull_request.merge_commit_sha }}
+        body: "Built from merged PR #${{ github.event.pull_request.number }}."
         files: ${{ matrix.asset }}.tar.gz
-        fail_on_unmatched_files: true
-
-    - name: stable release
-      uses: softprops/action-gh-release@v3
-      if: startsWith(github.ref, 'refs/tags/')
-      with:
-        files: ${{ matrix.asset }}.tar.gz
-        generate_release_notes: true
         fail_on_unmatched_files: true
