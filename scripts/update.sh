@@ -43,24 +43,29 @@ then
     CURL=/tmp/curl
 fi
 
-# GuppyKE lives at coreflake1/guppyscreen (was probielodan, upstream of this fork).
-$CURL -s https://api.github.com/repos/coreflake1/guppyscreen/releases -o /tmp/guppy-releases.json
-# Only consider stable releases: pushes to main publish a rolling "nightly" prerelease
-# whose tag doesn't version-compare, so ignore prereleases for the update check.
-latest_version=`jq -r '[.[] | select(.prerelease == false)][0].tag_name' /tmp/guppy-releases.json`
+# Releases come from alexholco/openke: every merged PR publishes one tagged
+# pr<N>, stamped into .version as pr<N>-<sha7>. PR numbers don't follow merge
+# order, so don't version-sort tags; take GitHub's latest release (the newest
+# one published) and update whenever it isn't the one installed.
+$CURL -s https://api.github.com/repos/alexholco/openke/releases/latest -o /tmp/guppy-releases.json
+latest_version=`jq -r '.tag_name' /tmp/guppy-releases.json`
 
 if [ -z "$latest_version" ] || [ "$latest_version" = "null" ]; then
     echo "Could not determine latest release; skipping update."
     exit 0
 fi
 
-if [ "$(printf '%s\n' "$CURRENT_VERSION" "$latest_version" | sort -V | head -n1)" = "$latest_version" ]; then
+if [ "${CURRENT_VERSION%%-*}" = "$latest_version" ]; then
     echo "Current version $CURRENT_VERSION is up to date."
     exit 0
 else
     # --arg passes the asset name safely (no shell-quote breakage) and we pull the asset
-    # from the same stable release chosen above.
-    asset_url=`jq -r --arg n "$ASSET_NAME" '[.[] | select(.prerelease == false)][0].assets[] | select(.name == $n).browser_download_url' /tmp/guppy-releases.json`
+    # from the same release chosen above.
+    asset_url=`jq -r --arg n "$ASSET_NAME" '.assets[] | select(.name == $n).browser_download_url' /tmp/guppy-releases.json`
+    if [ -z "$asset_url" ]; then
+        echo "Release $latest_version has no $ASSET_NAME asset; skipping update."
+        exit 0
+    fi
     echo "Downloading latest version $latest_version, $asset_url"
     $CURL -L "$asset_url" -o /tmp/guppyscreen.tar.gz
     _curl_rc=$?
